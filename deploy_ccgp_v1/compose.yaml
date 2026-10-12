@@ -1,0 +1,124 @@
+services:
+  postgres:
+    image: postgres:16-bookworm
+    container_name: zhaobiao-ccgp-v1-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    ports:
+      - "127.0.0.1:25432:5432"
+    volumes:
+      - zhaobiao_ccgp_v1_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - zhaobiao_ccgp_v1_backend
+
+  ingest-api:
+    build:
+      context: ./ingest_api
+    container_name: zhaobiao-ccgp-v1-ingest-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ccgp_zhaobiao_v1_ingest
+      DB_PASSWORD_FILE: /run/secrets/ingest_password
+      INGEST_API_KEY_FILE: /run/secrets/ingest_api_key
+      DB_POOL_MIN_SIZE: "1"
+      DB_POOL_MAX_SIZE: "5"
+    ports:
+      - "127.0.0.1:18080:8000"
+    secrets:
+      - ingest_password
+      - ingest_api_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - zhaobiao_ccgp_v1_backend
+
+  query-api:
+    build:
+      context: ./query_api
+    container_name: zhaobiao-ccgp-v1-query-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ccgp_zhaobiao_v1_reader
+      DB_PASSWORD_FILE: /run/secrets/reader_password
+      CURSOR_SECRET_FILE: /run/secrets/cursor_secret
+      DB_POOL_MAX_SIZE: "5"
+      IP_RATE_LIMIT: "300"
+    ports:
+      - "127.0.0.1:18081:8000"
+    secrets:
+      - reader_password
+      - cursor_secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - zhaobiao_ccgp_v1_backend
+
+volumes:
+  zhaobiao_ccgp_v1_postgres_data:
+    name: zhaobiao_ccgp_v1_postgres_data
+
+networks:
+  zhaobiao_ccgp_v1_backend:
+    name: zhaobiao-ccgp-v1-backend
+
+secrets:
+  ingest_password:
+    file: ./secrets/ingest_password
+  ingest_api_key:
+    file: ./secrets/ingest_api_key
+  reader_password:
+    file: ./secrets/reader_password
+  cursor_secret:
+    file: ./secrets/cursor_secret

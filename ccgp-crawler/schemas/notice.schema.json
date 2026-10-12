@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ccgp/notice.schema.json",
+  "title": "CCGP static-list notice payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "canonical_url",
+    "title",
+    "published_at",
+    "region_raw",
+    "region_code",
+    "category",
+    "source_list_url"
+  ],
+  "properties": {
+    "canonical_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://www\\.ccgp\\.gov\\.cn/cggg/.+\\.htm(?:\\?.*)?$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "\\+08:00$"
+    },
+    "region_raw": {
+      "type": ["string", "null"]
+    },
+    "region_code": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{6}$"
+    },
+    "category": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "source_list_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://www\\.ccgp\\.gov\\.cn/cggg/.+/index(?:_[0-9]+)?\\.htm$"
+    }
+  }
+}

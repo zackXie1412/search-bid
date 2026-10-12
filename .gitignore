@@ -1,0 +1,36 @@
+# Python
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/*.py[cod]
+**/*.egg-info/
+
+# Frontend build artifacts
+**/node_modules/
+**/dist/
+**/*.tsbuildinfo
+
+# Local configuration and secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets/
+**/*.pem
+**/*.key
+**/*.p12
+
+# Runtime data and backups
+**/runtime/
+**/backups/
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite3-*
+**/*.db
+**/*.dump
+
+# OS and editor files
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
